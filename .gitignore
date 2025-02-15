@@ -1,0 +1,8 @@
+# Ignore executable files (files with no extension)
+*
+!*/
+!*.*
+!Makefile
+
+# Ignore object files
+*.o
