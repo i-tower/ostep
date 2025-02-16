@@ -1,3 +1,6 @@
 #!/bin/bash
 
-gcc -Og -ggdb -Wall -Wextra -o $1 $1.c
+
+
+
+gcc -Og -ggdb -Wno-unused-result -Wall -Wextra $asan -o $1 $1.c
