@@ -67,6 +67,7 @@ int main(int argc, char* argv[]) {
     free(arena_buffer);
     stack_deinit(&stack);
 
+    return 0;
     
 }
 
