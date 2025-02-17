@@ -6,3 +6,6 @@
 
 # Ignore object files
 *.o
+
+# Ignore text files
+*.txt

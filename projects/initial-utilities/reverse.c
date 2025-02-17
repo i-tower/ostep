@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "reverse.h"
 
 #define INITIAL_BUFF_SIZE 1024
 
@@ -17,25 +18,55 @@ allocate more room
                                 start end           end
 
 */
-typedef struct String_Stack {
-    size_t top;
-    size_t size; 
-    char* arr[];
-} String_Stack;
+
 
 int main(int argc, char* argv[]) {
-    if (argc < 2) errx(EXIT_FAILURE, "Usage: ./wrgep <filename>");  
+    if (argc < 2) errx(EXIT_FAILURE, "Usage: ./reverse <filename>");  
     
-    FILE* infile = fopen(argv[2], "r");
+    FILE* infile = fopen(argv[1], "r");
     if (infile == NULL) errx(EXIT_FAILURE, "Failed to open file");
 
-    size_t buffer_size = INITIAL_BUFF_SIZE;
-    ssize_t line_length = 0;
-    char* buffer = malloc(INITIAL_BUFF_SIZE);
+    ssize_t filesize = get_filesize(argv[1]);
 
-    String_Stack* line_stack = malloc(sizeof(String_Stack) + (sizeof(char*) * INITIAL_BUFF_SIZE));
-    line_stack->top = 0;
-    line_stack->size = INITIAL_BUFF_SIZE;
+    // Init arena
+    char* arena_buffer = malloc(filesize * 2);
+    if (arena_buffer == NULL) errx(EXIT_FAILURE, "Failed to allocate backing buffer");
+    Arena arena;
+    arena_init(&arena, arena_buffer, filesize * 2);
+
+    //Init stack
+    String_Stack stack;
+    stack_init(&stack, filesize);
+
+    char* read_buffer = NULL;
+    size_t read_buffer_size = 0;
+    ssize_t read_len = 0;
+
+    while((read_len = getline(&read_buffer, &read_buffer_size, infile)) >= 0) {
+        char* tmp;
+        // need +1 to include the null terminator
+        if((tmp = arena_alloc(&arena, read_len + 1)) == NULL) errx(EXIT_FAILURE, "arena_alloc failed");
+
+        // here too
+        memcpy(tmp, read_buffer, read_len + 1);
+
+        push_stack(&stack, tmp);
+
+    }
+    fclose(infile);
+
+    for(size_t i = stack.top; i > 0; --i){
+        if (argc > 2) {
+            // TOOD: print to outfile
+        } else {
+            printf("%s", pop_stack(&stack));
+        }
+    }
+
+    free(read_buffer);
+    free(arena_buffer);
+    stack_deinit(&stack);
+
     
 }
 
