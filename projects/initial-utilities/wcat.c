@@ -26,6 +26,6 @@ int main(int argc, char* argv[]) {
 
         if (fclose(infile) != 0) errx(EXIT_FAILURE, "Failed to close file\n");
     }
-
+    
     
 }
