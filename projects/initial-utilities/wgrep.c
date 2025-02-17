@@ -19,6 +19,7 @@ int main(int argc, char* argv[]) {
     char* buffer = malloc(sizeof(char) * INITIAL_BUFF_SIZE);
     
     while ((line_length = getline(&buffer, &buffer_size, infile)) >= 0) {
+        // getline can call realloc! No pointers to buffer other than buffer please
         if (buffer == NULL) {
             free(buffer);
             errx(EXIT_FAILURE, "Getline realloc failed!!!");
