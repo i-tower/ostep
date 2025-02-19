@@ -24,9 +24,50 @@ The **base** is some offset that determines where the actual physical location o
 
 The **bounds** some size value of the address space the process owns. mmu checks the address is within bound and raises an exception if its out of bounds.
 
- #### Advantages/Problems to Base/Bounds
+ #### Advantages/Problems to Base/Bounds/Address relocation
 
 **Advantage** It's fast and simple
 
 **Disadvantages** It's hard to allocate. Needs large continuous blocks of memory
 It's hard to expand and hard to share memory.
+
+#### OS Involvement
+
+This address relocation is done directly in hardware but the os must get involved at some points
+
+* During a context switch the OS must update the base and bounds (this must be a privileged operation or any program could write arbitrary data)
+
+* Os may want to defragment memory. The os will have to stop the running program make a non destructive copy, change the base and bounds, and make the processes runnable again.
+
+* If the os defragments or allocates more memory for a process it needs to make sure that newly allocated memory is zeroed or another process may be able to read the freed memory of another process
+
+#### Segmentation
+
+* Multiple base/bounds pairs per process. One pair per logical region of address space
+  - A little more for the os to do, needs to know which segment of code have which base/bounds.
+
+#### Paging
+
+Divide up the virtual address space into fixed-size pages. Typically 4kb
+
+* **Problems** 
+  - There is a lot of information stored in memory about each process in order to manage memory...
+  -
+
+* **VPN** Each address consists of a virtual page number and an offset
+
+'''
+00|101 < Offset
+^
+|
+Virtual Page Number
+'''
+
+We translate the virtual page number into a (PFN) Physical Frame Number. The offset stays the same.
+
+Translation Information: 
+- Store this in memory somewhere
+- Stored in a data structure called a page table
+  - This is sometimes defined in hardware.
+
+
