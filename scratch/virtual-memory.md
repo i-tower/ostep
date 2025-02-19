@@ -15,5 +15,18 @@ Using IO at sizes other than the os' preferred sizes will cause problems. Reads 
 
 
 The os has to translate between the virtual address and real physical memory. Virtual address space is potentially very large (2^64 on a 64 bit machine)
+ 
+#### How does this translation happen
 
+The cpu has a memory management unit. The mmu has 2 register a base and a bounds. Every user address is a virtual address you as a program have no idea where the program memory actually lives in physical memory. 
 
+The **base** is some offset that determines where the actual physical location of the memory is. If a program has an virtual address at 10 and the os sets its base at 100 the physical address of the memory will be at 110.
+
+The **bounds** some size value of the address space the process owns. mmu checks the address is within bound and raises an exception if its out of bounds.
+
+ #### Advantages/Problems to Base/Bounds
+
+**Advantage** It's fast and simple
+
+**Disadvantages** It's hard to allocate. Needs large continuous blocks of memory
+It's hard to expand and hard to share memory.
