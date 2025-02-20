@@ -1,3 +1,3 @@
 #!/bin/bash
 
-gcc -Og -Wall -Wextra -ggdb -o $1 $1.c
+gcc -O3 -Wall -Wextra -o $1 $1.c
