@@ -80,7 +80,11 @@ int main(int argc, char* argv[]) {
         
 
     }
+    Timespec res;
+    clock_getres(CLOCK_PROCESS_CPUTIME_ID, &res);
 
+    printf("CLOCK_PROCESS_CPUTIME_ID: Seconds: %ld NS: %ld\n", res.tv_sec, res.tv_nsec);
+    printf("Total nanoseconds: %lu\n", total_ns);
     printf("Average time in ns: %ld\n", (total_ns / iterations) / num_pages);
     printf("Iterations: %ld\n", iterations);
     printf("Number of pages: %ld\n", num_pages);
