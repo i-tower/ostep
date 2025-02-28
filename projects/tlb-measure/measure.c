@@ -1,10 +1,14 @@
 #define _POSIX_C_SOURCE 200809L
+#define _GNU_SOURCE
 
+#include <errno.h>
+#include <sched.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
 #include <sys/time.h>
+#include <unistd.h>
 #include "argparse.h"
 
 #define PAGESIZE 4096
@@ -23,17 +27,26 @@ to complete the inner loop.
 
 typedef struct timespec Timespec;
 
-inline long my_difftime(const Timespec* begin, const Timespec* end) {
+/* 
+*  A function for dealing with subtracting nanoseconds where the total time elapsed
+*  is greater than 1 second. Since all we care about is the time in nanoseconds we
+*  simply add 1 000 000 000 to the nanoseconds and return that.
+*/
+static inline long my_difftime(Timespec * begin, Timespec* end) {
+    long begin_nsec = begin->tv_nsec;
+    long end_nsec = end->tv_nsec;
 
-    if ((end->tv_sec - begin->tv_sec) != 0) {
-        fprintf(stderr, "too long between times (greater than 1 second)\n");
-        exit(1);
-    }
+    // We can just multiply by 1 billion since tv_sec is usually 0.
+    begin_nsec += begin->tv_sec * 1000000000;
+    end_nsec += end->tv_sec * 1000000000;
 
-    return end->tv_nsec - begin->tv_nsec;
+    return end_nsec - begin_nsec;
 }
 
 int main(int argc, char* argv[]) {
+
+    errno = 0;
+    
 
     if (argc != 3) {
         // Command line argument parsing
@@ -61,7 +74,8 @@ int main(int argc, char* argv[]) {
 
     
     unsigned long total_ns = 0;
-    unsigned long per_page_ns = 0;
+    //unsigned long per_page_ns = 0;
+    //Timespec ts_diff_total;
     Timespec ts_begin;
     Timespec ts_end;
     for (size_t i = 0; i < iterations; ++i) {
@@ -76,7 +90,7 @@ int main(int argc, char* argv[]) {
 
         clock_gettime(CLOCK_MONOTONIC, &ts_end);
 
-        total_ns += ts_end.tv_nsec - ts_begin.tv_nsec;
+         total_ns += my_difftime(&ts_begin, &ts_end);
         
 
     }
