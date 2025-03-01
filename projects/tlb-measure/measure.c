@@ -13,6 +13,10 @@
 
 #define PAGESIZE 4096
 
+#define TEST_FLAG
+#define VEC_FLAG
+
+
 
 /*
 * Timing page files. Create a large datastructure with some number of page files. 
@@ -33,6 +37,17 @@
 
 typedef struct timespec Timespec;
 
+typedef struct LongVec{
+    size_t top;
+    size_t size;
+    long array[];
+}LongVec;
+
+LongVec* push_longvec(LongVec* vec, long value);
+void destroy_longvec(LongVec* vec);
+
+
+
 /* 
 *  A function for dealing with subtracting nanoseconds where the total time elapsed
 *  is greater than 1 second. Since all we care about is the time in nanoseconds we
@@ -51,10 +66,16 @@ static inline long my_difftime(Timespec * begin, Timespec* end) {
 
 int main(int argc, char* argv[]) {
 
+    cpu_set_t set;
+    CPU_ZERO(&set); 
+    CPU_SET(0, &set);
+    sched_setaffinity(getpid(), sizeof(set), &set);
+
     errno = 0;
     
 
     FILE* outfile = fopen("out.txt", "w");
+    FILE* resultsfile = fopen("results.txt", "w");
 
     if (argc < 3 ) {
         fprintf(stderr, "Usage: ./measure <number_of_pages> <number_of_iterations>\n");
@@ -77,6 +98,14 @@ int main(int argc, char* argv[]) {
         exit(1);
     } 
 
+    LongVec *results_collection = malloc(sizeof(LongVec) + (sizeof(long) * 1024));
+    if (results_collection == NULL) {
+        fprintf(stderr, "malloc failed to allocate result collection\n");
+        exit(1);
+    }
+    results_collection->size = 1024;
+    results_collection->top = 0;
+
 
     memset(a_big_array, 0, PAGESIZE * num_pages);
 
@@ -91,13 +120,15 @@ int main(int argc, char* argv[]) {
     //FIXME: Tracking time this way is not returning sensible results
     // perhaps try tracking time for each iteration individually?
     // should still be the same result though.. idk
+    
+
     for (size_t i = 0; i < iterations; ++i) {
 
         size_t rand_offset = (size_t) ((rand() + user_offset) % jump);
         //printf("random offset is: %lu\n", rand_offset);
         //size_t rand_offset = 1000;
 
-        clock_gettime(CLOCK_MONOTONIC, &ts_begin);
+        clock_gettime(CLOCK_REALTIME, &ts_begin);
 
         
         for(size_t j = 0; j < num_pages * jump; j += jump) {
@@ -105,14 +136,21 @@ int main(int argc, char* argv[]) {
             a_big_array[j + rand_offset] += 1;
         }
 
-        clock_gettime(CLOCK_MONOTONIC, &ts_end);
+        clock_gettime(CLOCK_REALTIME, &ts_end);
+        size_t diff = my_difftime(&ts_begin, &ts_end);
+        total_ns += diff;
 
-         total_ns += my_difftime(&ts_begin, &ts_end);
+        results_collection = push_longvec(results_collection, diff / num_pages);
+        
         
     }
 
     for (size_t i = 0; i < (PAGESIZE * num_pages) / sizeof(int); ++i) {
         fprintf(outfile, "%d\n", a_big_array[i]);
+    }
+
+    for(size_t i = 0; i < results_collection->top; i++){
+        fprintf(resultsfile, "%ld\n", results_collection->array[i]);
     }
 
     //printf("CLOCK_PROCESS_CPUTIME_ID: Seconds: %ld NS: %ld\n", res.tv_sec, res.tv_nsec);
@@ -122,5 +160,25 @@ int main(int argc, char* argv[]) {
     printf("Iterations: %ld\n", iterations);
     printf("Number of pages: %ld\n", num_pages);
 
+    // Do i need to do this? no but it makes finding other memory bugs easier because
+    // the address sanitizer complains.
     free(a_big_array);
+    free(results_collection);
+}
+
+LongVec* push_longvec(LongVec* vec, long value) 
+{
+    if (vec->top + 1 >= vec->size) {
+        vec->size *= 2;
+        vec = realloc(vec, sizeof(long) * vec->size);
+        if (vec == NULL) {
+            fprintf(stderr, "Realloc failed in push_longvec\n");
+            exit(1);
+        }
+    }
+
+    vec->array[vec->top] = value;
+    vec->top++;
+
+    return vec;
 }
