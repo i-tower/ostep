@@ -9,5 +9,6 @@
 
 # Ignore text files
 *.txt
+.vscode
 coursefiles/
 ostep-homework
