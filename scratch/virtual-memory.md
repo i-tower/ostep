@@ -71,3 +71,13 @@ Translation Information:
   - This is sometimes defined in hardware.
 
 
+
+## Swaping Pages to Disk
+
+#### Homework Questions
+
+1. Yes  it makes sense. User time column is showing the percentage of cpu being used for a user space program. It idle's around 1 percent and when running mem goes up to around 9% running two instances of mem straightforwardly increases the user time useage by another ~8%
+
+2. The  free column changes by approximately 1gb when running mem with ./mem 1024 and increases by around the same amount when ending the program.
+
+3. Using around 13 gb the ./mem program takes quite a while to start up. Around 10gb of data needs to be swapped out of memory to make room for the program to run. After this is done nothing is swapped out and very little is swapped in. Presumably what's being swapped in is related to background os processes or maybe firefox playing music in the background.

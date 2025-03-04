@@ -67,7 +67,7 @@ static inline long my_difftime(Timespec * begin, Timespec* end) {
 int main(int argc, char* argv[]) {
 
     cpu_set_t set;
-    CPU_ZERO(&set); 
+    CPU_ZERO(&set);     
     CPU_SET(0, &set);
     sched_setaffinity(getpid(), sizeof(set), &set);
 
