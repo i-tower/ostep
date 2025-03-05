@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define UNUSED(x) (void)(x)
+
 // char *arg_whitespace = " \t\n\r\f";
 int arg_parser(char** dest, char* src, size_t arg_max);
 
@@ -73,9 +76,13 @@ ssize_t arg_tokenize(char* token_buffer, const char* instr, size_t buffer_size)
     return token_len;
 }
 
-//  extern int arg_parser(char** dest, char* src, size_t arg_max) 
-// {
+ extern int arg_parser(char** dest, char* src, size_t arg_max) 
+{
+    UNUSED(dest);
+    UNUSED(src);
+    UNUSED(arg_max);
 
-// }
+    return -1;
+}
 
 #endif
