@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include "argparse.h"
 
 #define MAX_ARGS 10
 #define MAX_ARG_LEN 256
@@ -36,6 +37,8 @@ int main(void) {
             exit(1);
         }
         // TODO: Extract command line arguments
+
+        //int parse_args(char **dest, char *src)
         //HACK: Eventually hand the string to the argument parser
         //Set the newline character to 0; FIXME: Does this work with eof? 
         line_ptr[nread - 1] = '\0';
