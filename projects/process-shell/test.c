@@ -40,7 +40,7 @@ int main(void) {
         printf("Passed test 4!\n");
         //printf("Buffer contents for testing: %s\n", buffer);
     } else {
-        printf("Failed test 4 output: %s", buffer);
+        printf("Failed test 4 output: %s\n", buffer);
     }
 
     char* test_5_string = "The Mad King!";
