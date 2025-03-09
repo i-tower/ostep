@@ -42,11 +42,13 @@ uintptr_t align_forward(uintptr_t ptr, size_t align)
     return p;
 }
 
+
 void init_string_arena(StringArena* arena, char* backing_buffer, size_t backing_buffer_size) 
 {
     arena->data = backing_buffer;
     arena->offset = 0;
     arena->size = backing_buffer_size;
+    memset(arena->data, 0, backing_buffer_size);
 }
 
 void string_arena_reset(StringArena* a) 
@@ -164,14 +166,14 @@ size_t arg_tokenize(char* token_buffer, const char* instr, size_t buffer_size)
 
 // this sucks argslist doesn't really "own" the strings im giving it here...
 // I'm hiding a memory allocation in here that the main program cant free.
-size_t arg_parser(ArgsList* dest, StringArena arena, char* src) 
+size_t arg_parser(ArgsList* dest, StringArena *arena, char* src) 
 {
     char token_buffer[256];
     
     size_t token_length = 0;
     size_t count = 0;
     while ((token_length = arg_tokenize(token_buffer, src, 4096)) != 0) {
-        push_argslist(dest, string_alloc(&arena, token_buffer, token_length));
+        push_argslist(dest, string_alloc(arena, token_buffer, token_length));
         count++;
     }
 

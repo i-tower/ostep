@@ -1,15 +1,49 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "argparse.h"
 
+// to make vscode stfu
+#define true 1
+#define false 0
+
+#define PAGE_SIZE 4096
+
+
+
+bool arg_parse_tester(StringArena *a, char** expected, char* input, int expected_count) 
+{   
+    ArgsList arg_list = {
+        .len = 0,
+        .size = 16,
+        .list = malloc(sizeof(char*) * 16)
+    };
+    int argc = arg_parser(&arg_list, a, input);
+
+    
+    if (argc != expected_count) {
+       free(arg_list.list);    
+       return false;
+    }
+    for (size_t i = 0; arg_list.list[i] != NULL; ++i) {
+
+        if (memcmp(expected[i], arg_list.list[i], strlen(expected[i]))) {
+            free(arg_list.list);
+            return false;
+        }
+    }
+
+    free(arg_list.list);
+    return true;
+}
 
 int main(void) {
 
     char buffer[256];
     
-    
+    printf("------- Testing tokenization --------\n");
     arg_tokenize(buffer, "hello", 256);
     if (0 == strcmp("hello", buffer)) {
         printf("Passed test 1!\n");
@@ -60,6 +94,29 @@ int main(void) {
     if(0 == strcmp("flames", buffer)) {
         printf("Passed test 6!\n");
     } else {
-        printf("Failed test 6 output: %s", buffer);
+        printf("Failed test 6 output: %s\n", buffer);
+    }
+
+    printf("------- Testing argument parsing -------\n");
+
+    // Setup for calling the parser
+
+    StringArena str_arena;
+    char* backing_buffer = malloc(PAGE_SIZE * 16);
+    init_string_arena(&str_arena, backing_buffer, PAGE_SIZE * 16);
+    
+    char *ex1 = 0, *ex2 = 0, *ex3 = 0, *ex4 = 0, *ex5 = 0;
+
+    char* expected[6] = {ex1, ex2, ex3, ex4, ex5, NULL};
+    char* input;
+
+    ex1 = "filename";
+    ex2 = "arg1";
+    ex3 = "arg2";
+    input = "filename arg1 arg2";
+    if (!arg_parse_tester(&str_arena, expected, input, 3)) {
+        printf("Failed test 1 output: <UNIMPLEMENTED>\n");
+    } else {
+        printf("Test 1 passed!\n");
     }
 }
