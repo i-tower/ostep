@@ -19,7 +19,7 @@
 
 int main(void) {
     
-    char* line_ptr;
+    char* line_ptr = NULL;
     char* path;
     size_t line_len = 0;
     ssize_t nread = 0;
@@ -33,21 +33,24 @@ int main(void) {
     StringArena str_arena;
     init_string_arena(&str_arena, str_arena_buffer, 65536);
 
+    
+    
     ArgsList arg_list = {
         .len = 0,
         .size = 16,
         .list = malloc(sizeof(char*) * 16)
     };
     
-    if (arg_list.list == NULL) {
-        fprintf(stderr, "malloc failed in arg list\n");
-        exit(1);
-    }
-    
-    char arg_buffer[256];    
     
     while(1) {
         
+        arg_list.list = malloc(sizeof(char*) * 16);
+
+        if (arg_list.list == NULL) {
+            fprintf(stderr, "malloc failed in arg list\n");
+            exit(1);
+        }
+
         printf("wish> ");
         if ((nread= getline(&line_ptr, &line_len, stdin)) < 0) {
             exit(1);
@@ -55,34 +58,28 @@ int main(void) {
             fprintf(stderr, "Input too long\n");
             exit(1);
         }
-        //HACK: Eventually handle this with arg parsing library.
-        // should return a null terminated array of char*s 
-        // first entry is file name subsequent entries are arguments
-        // TODO: Extract command line arguments
+         
+        size_t arg_count = arg_parser(&arg_list, &str_arena, line_ptr);
+        if (arg_count == 0) {
+            fprintf(stderr, "We should never have 0 arguments...\n");
+            string_arena_reset(&str_arena);
+            free(arg_list.list);
+            continue;
+        }
 
-        //int parse_args(char **dest, char *src)
-        //HACK: Eventually hand the string to the argument parser
-        //Set the newline character to 0; FIXME: Does this work with eof? 
-        line_ptr[nread - 1] = '\0';
-
-        //HACK: Should I use length strings? Perhaps the parsing lib should but I think
-        // the top level program should use standard c strings?
-
-        memcpy(arg_buffer, line_ptr, nread);
-        arg_list[0] = arg_buffer;
-        arg_list[1] = NULL; 
-
+        
         //HACK: Do path things. We should have an array/linked list of all the paths
-        if((asprintf(&path,"/usr/bin/%s%c", arg_buffer, '\0')) < 0){
+        if((asprintf(&path,"/usr/bin/%s%c", arg_list.list[0], '\0')) < 0){
             fprintf(stderr, "Allocation failed in asprintf for path\n");
         }
         
        
+        if (!memcmp("exit", arg_list.list[0], 4)) goto end;
 
         if (fork() == 0) {
             // We are the child
-            if((execv(path, arg_list)) < 0) {
-                perror(NULL);
+            if((execv(path, arg_list.list)) < 0) {
+                perror("Child Error!\n");
                 exit(1);
             }
             
@@ -90,10 +87,17 @@ int main(void) {
             // Parent process
             wait(NULL);
         }
-
+        
+        free(arg_list.list);
+        string_arena_reset(&str_arena);
     }
 
+    end:
+
+    free(arg_list.list);
     free(line_ptr);
     free(path);
+    free(str_arena_buffer);
+
     return 0;
 }

@@ -79,7 +79,7 @@ char* string_alloc(StringArena* arena, char* str, size_t len)
 void push_argslist(ArgsList* aL, char* token) 
 {
     if (aL->len + 1 == aL->size) { 
-        if((aL = realloc(aL, aL->size * 2)) == NULL) {
+        if((aL->list = realloc(aL->list, aL->size * 2)) == NULL) {
             fprintf(stderr, "ArgsList realloc failed\n");
             exit(1);
         }
@@ -119,13 +119,13 @@ void push_argslist(ArgsList* aL, char* token)
 // storing the token in token_buffer up to the size of buffer_size. The stored token
 // always includes a null terminator. Crashes the program if token size exceeds buffer size
 // If no token is found length returned is 0. Tokens are separated by whitespace
-size_t arg_tokenize(char* token_buffer, const char* instr, size_t buffer_size)
+size_t arg_tokenize(char* token_buffer, const char* instr, const size_t count, size_t buffer_size)
 {
 
     static const char* next_token_ptr;
     static const char* previous_str;
 
-    if (instr != previous_str) {
+    if (instr != previous_str || count == 0) {
         previous_str = instr;
         next_token_ptr = instr;
     }
@@ -169,15 +169,16 @@ size_t arg_tokenize(char* token_buffer, const char* instr, size_t buffer_size)
     return token_len + 1;
 }
 
-// this sucks argslist doesn't really "own" the strings im giving it here...
-// I'm hiding a memory allocation in here that the main program cant free.
-size_t arg_parser(ArgsList* dest, StringArena *arena, char* src) 
+// Parses args from a user input string. Returns the number of arguments. 
+size_t arg_parser(ArgsList* dest, StringArena *arena, const char* src) 
 {
     char token_buffer[256];
     
     size_t token_length = 0;
     size_t count = 0;
-    while ((token_length = arg_tokenize(token_buffer, src, 4096)) != 0) {
+    // HACK: Adding parameter to arg_tokenize call to know if we are
+    // calling it for the first time with this command
+    while ((token_length = arg_tokenize(token_buffer, src, count, 4096)) != 0) {
         push_argslist(dest, string_alloc(arena, token_buffer, token_length));
         count++;
     }
