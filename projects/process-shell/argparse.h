@@ -56,6 +56,7 @@ void string_arena_reset(StringArena* a)
     a->offset = 0;
 }
 
+// String alloc expects the length of the string including the null terminator
 char* string_alloc(StringArena* arena, char* str, size_t len) 
 {
     if (arena->offset + len >= arena->size) {
@@ -70,7 +71,7 @@ char* string_alloc(StringArena* arena, char* str, size_t len)
     offset -= (uintptr_t) arena->data;
 
     char* ret = &arena->data[offset];
-    arena->offset = offset;
+    arena->offset = offset + len;
     memcpy(ret, str, len);
     return ret;
 }
@@ -114,6 +115,7 @@ void push_argslist(ArgsList* aL, char* token)
 //            -> set end to '\0'
 
 // Takes a pointer to a null terminated string and returns the length of the token found
+// the length of the found token should include the null terminator hello
 // storing the token in token_buffer up to the size of buffer_size. The stored token
 // always includes a null terminator. Crashes the program if token size exceeds buffer size
 // If no token is found length returned is 0. Tokens are separated by whitespace
@@ -154,6 +156,8 @@ size_t arg_tokenize(char* token_buffer, const char* instr, size_t buffer_size)
     if (token_len > buffer_size) {
         fprintf(stderr, "Token length exceeds buffer size!\n");
         exit(1);
+    } else if (token_len == 0) {
+        return 0;
     }
     
     memcpy(token_buffer, &next_token_ptr[begin], token_len);
@@ -161,7 +165,8 @@ size_t arg_tokenize(char* token_buffer, const char* instr, size_t buffer_size)
     token_buffer[token_len] = '\0';
 
     next_token_ptr = &next_token_ptr[end];
-    return token_len;
+    // add 1 to include null terminator
+    return token_len + 1;
 }
 
 // this sucks argslist doesn't really "own" the strings im giving it here...

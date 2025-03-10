@@ -27,16 +27,22 @@ bool arg_parse_tester(StringArena *a, char** expected, char* input, int expected
        free(arg_list.list);    
        return false;
     }
-    for (size_t i = 0; arg_list.list[i] != NULL; ++i) {
+    bool ret = true;
+    printf("Outside loop expected: %s\n", expected[0]);
+    for (size_t i = 0; arg_list.list[i] != NULL && expected[i] != NULL; ++i) {
 
         if (memcmp(expected[i], arg_list.list[i], strlen(expected[i]))) {
             free(arg_list.list);
-            return false;
+            ret = false;
         }
+
+        printf("Expected: %s\n", expected[i]);
+        printf("Actual: %s\n", arg_list.list[i]);
+
     }
 
     free(arg_list.list);
-    return true;
+    return ret;
 }
 
 int main(void) {
@@ -53,6 +59,7 @@ int main(void) {
 
     arg_tokenize(buffer, "      world ", 256);
     if(0 == strcmp("world", buffer)) {
+  
         printf("Passed test 2!\n");
     } else {
         printf("Failed test 2 output: %s", buffer);
@@ -97,6 +104,14 @@ int main(void) {
         printf("Failed test 6 output: %s\n", buffer);
     }
 
+    char* test_7_string = "f";
+    arg_tokenize(buffer, test_7_string, 256);
+    if(0 == strcmp("f", buffer)) {
+        printf("Passed test 7!\n");
+    } else {
+        printf("Failed test 7 output: %s\n", buffer);
+    }
+
     printf("------- Testing argument parsing -------\n");
 
     // Setup for calling the parser
@@ -106,17 +121,31 @@ int main(void) {
     init_string_arena(&str_arena, backing_buffer, PAGE_SIZE * 16);
     
     char *ex1 = 0, *ex2 = 0, *ex3 = 0, *ex4 = 0, *ex5 = 0;
+    ex1 = "filename";
+    ex2 = "arg1";
+    ex3 = "arg2";
 
     char* expected[6] = {ex1, ex2, ex3, ex4, ex5, NULL};
     char* input;
 
-    ex1 = "filename";
-    ex2 = "arg1";
-    ex3 = "arg2";
     input = "filename arg1 arg2";
     if (!arg_parse_tester(&str_arena, expected, input, 3)) {
+        
         printf("Failed test 1 output: <UNIMPLEMENTED>\n");
     } else {
         printf("Test 1 passed!\n");
     }
+    
+    string_arena_reset(&str_arena);
+    ex1 = "f";
+    ex2 = NULL;
+    ex3 = NULL;
+    input = "f";
+    char* test_2_expected[2] = {ex1, ex2};
+    if(!arg_parse_tester(&str_arena, test_2_expected, input, 1)) {
+        printf("Failed test 2\n");
+    } else {
+        printf("Test 2 passed\n");
+    }
+
 }
