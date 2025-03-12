@@ -8,18 +8,15 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include "argparse.h"
+#include "wishpaths.h"
 
 
 #define MAX_ARG_LEN 256
 #define MAX_PATH 4096
 
 
-
-
-
-
 int main(void) {
-    
+
     char* line_ptr = NULL;
     size_t line_len = 0;
     ssize_t nread = 0;
@@ -35,11 +32,15 @@ int main(void) {
     
     
     
-    ArgsList arg_list = {
+    StringList arg_list = {
         .len = 0,
         .size = 16,
         .list = malloc(sizeof(char*) * 16)
     };
+
+    
+    StringList* path_list = init_path();
+
     
     char path[MAX_PATH];
     
@@ -64,22 +65,31 @@ int main(void) {
         if (arg_count == 0) {
             fprintf(stderr, "We should never have 0 arguments...\n");
             string_arena_reset(&str_arena);
-            reset_argslist(&arg_list);
+            reset_stringlist(&arg_list);
             continue;
         }
 
+        if (strlen(arg_list.list[0]) >= 4) {
+
+            if (!memcmp("exit", arg_list.list[0], 4)) goto end;
+
+            if (!memcmp("path", arg_list.list[0], 4)) {
+                push_stringlist()
+            }
+        }
         
         //HACK: Do path things. We should have an array/linked list of all the paths
-        int path_len = snprintf(path, MAX_PATH, "/usr/bin/%s%c", arg_list.list[0], '\0');
+        int path_len = snprintf(path, MAX_PATH, "/bin/%s%c", arg_list.list[0], '\0');
+        if (access(path, F_OK) == 0) {
+            printf("Access OK\n");
+        } else {
+            printf("Access Not Ok\n");
+        }
         if(path_len < 0 || path_len >= MAX_PATH){
             fprintf(stderr, "Error in path snprintf\n");
             exit(1);
         }
         
-        if (strlen(arg_list.list[0]) >= 4) {
-
-            if (!memcmp("exit", arg_list.list[0], 4)) goto end;
-        }
 
         if (fork() == 0) {
             // We are the child
@@ -93,7 +103,7 @@ int main(void) {
             wait(NULL);
         }
         
-        reset_argslist(&arg_list);
+        reset_stringlist(&arg_list);
         
         string_arena_reset(&str_arena);
     }
@@ -102,7 +112,7 @@ int main(void) {
 
     free(arg_list.list);
     free(line_ptr);
-
+    free(path_list);
     free(str_arena_buffer);
 
     return 0;

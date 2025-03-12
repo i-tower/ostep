@@ -15,11 +15,11 @@
 
 typedef struct StringArena StringArena;
 
-typedef struct argslist {
+typedef struct StringList {
     size_t len;
     size_t size;
     char** list;
-}ArgsList;
+}StringList;
 
 typedef struct StringArena {
     uintptr_t offset;
@@ -76,28 +76,31 @@ char* string_alloc(StringArena* arena, char* str, size_t len)
     return ret;
 }
 
-void push_argslist(ArgsList* aL, char* token) 
+
+// FIXME: Should I change this data structure to reallocate the whole thing on realloc and
+// have all string lists live on the heap? That seem better.
+void push_stringlist(StringList* sl, const char* token) 
 {
-    if (aL->len + 1 == aL->size) { 
-        if((aL->list = realloc(aL->list, aL->size * 2)) == NULL) {
+    if (sl->len + 1 == sl->size) { 
+        if((sl->list = realloc(sl->list, sl->size * 2)) == NULL) {
             fprintf(stderr, "ArgsList realloc failed\n");
             exit(1);
         }
 
-        aL->size *= 2;
+        sl->size *= 2;
     }
 
-    aL->list[aL->len] = token;
-    aL->len++;
-    aL->list[aL->len] = NULL;
+    sl->list[sl->len] = token;
+    sl->len++;
+    sl->list[sl->len] = NULL;
 }
 
-void reset_argslist(ArgsList* al) 
+void reset_stringlist(StringList* sl) 
 {
-    for (size_t i = 0; i < al->len; ++i) {
-        al->list[i] = NULL;
+    for (size_t i = 0; i < sl->len; ++i) {
+        sl->list[i] = NULL;
     }
-    al->len = 0;
+    sl->len = 0;
 }
 
 // char *arg_whitespace = " \t\n\r\f";
@@ -176,7 +179,7 @@ size_t arg_tokenize(char* token_buffer, const char* instr, const size_t count, s
 }
 
 // Parses args from a user input string. Returns the number of arguments. 
-size_t arg_parser(ArgsList* dest, StringArena *arena, const char* src) 
+size_t arg_parser(StringList* dest, StringArena *arena, const char* src) 
 {
     char token_buffer[256];
     
@@ -185,7 +188,7 @@ size_t arg_parser(ArgsList* dest, StringArena *arena, const char* src)
     // HACK: Adding parameter to arg_tokenize call to know if we are
     // calling it for the first time with this command
     while ((token_length = arg_tokenize(token_buffer, src, count, 4096)) != 0) {
-        push_argslist(dest, string_alloc(arena, token_buffer, token_length));
+        push_stringlist(dest, string_alloc(arena, token_buffer, token_length));
         count++;
     }
 

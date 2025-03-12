@@ -15,7 +15,7 @@
 
 bool arg_parse_tester(StringArena *a, char** expected, char* input, int expected_count) 
 {   
-    ArgsList arg_list = {
+    StringList arg_list = {
         .len = 0,
         .size = 16,
         .list = malloc(sizeof(char*) * 16)
