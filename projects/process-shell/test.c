@@ -50,14 +50,14 @@ int main(void) {
     char buffer[256];
     
     printf("------- Testing tokenization --------\n");
-    arg_tokenize(buffer, "hello", 256);
+    arg_tokenize(buffer, "hello", 0, 256);
     if (0 == strcmp("hello", buffer)) {
         printf("Passed test 1!\n");
     } else {
         printf("Failed test 1 output: %s", buffer);
     }
 
-    arg_tokenize(buffer, "      world ", 256);
+    arg_tokenize(buffer, "      world ", 0, 256);
     if(0 == strcmp("world", buffer)) {
   
         printf("Passed test 2!\n");
@@ -66,8 +66,8 @@ int main(void) {
     }
 
     char* test_3_string = "Hello world!";
-    arg_tokenize(buffer, test_3_string, 256);
-    arg_tokenize(buffer, test_3_string, 256);
+    arg_tokenize(buffer, test_3_string, 0, 256);
+    arg_tokenize(buffer, test_3_string, 1, 256);
     if(0 == strcmp("world!", buffer)) {
         printf("Passed test 3!\n");
     } else {
@@ -75,9 +75,9 @@ int main(void) {
     }
 
     char* test_4_string = "Hello world!";
-    arg_tokenize(buffer, test_4_string, 256);
-    arg_tokenize(buffer, test_4_string, 256);
-    if(0 == arg_tokenize(buffer, test_4_string, 256)) {
+    arg_tokenize(buffer, test_4_string, 0, 256);
+    arg_tokenize(buffer, test_4_string, 1, 256);
+    if(0 == arg_tokenize(buffer, test_4_string, 2, 256)) {
         printf("Passed test 4!\n");
         //printf("Buffer contents for testing: %s\n", buffer);
     } else {
@@ -85,9 +85,9 @@ int main(void) {
     }
 
     char* test_5_string = "The Mad King!";
-    arg_tokenize(buffer, test_5_string, 256);
-    arg_tokenize(buffer, test_3_string, 256);
-    arg_tokenize(buffer, test_5_string, 256);
+    arg_tokenize(buffer, test_5_string, 0, 256);
+    arg_tokenize(buffer, test_3_string, 1, 256);
+    arg_tokenize(buffer, test_5_string, 2, 256);
     if(0 == strcmp("The", buffer)) {
         printf("Passed test 5!\n");
     } else {
@@ -95,9 +95,9 @@ int main(void) {
     }
 
     char* test_6_string = "sinking into flames really slow motion";
-    arg_tokenize(buffer, test_6_string, 256);
-    arg_tokenize(buffer, test_6_string, 256);
-    arg_tokenize(buffer, test_6_string, 256);
+    arg_tokenize(buffer, test_6_string, 0, 256);
+    arg_tokenize(buffer, test_6_string, 1, 256);
+    arg_tokenize(buffer, test_6_string, 2, 256);
     if(0 == strcmp("flames", buffer)) {
         printf("Passed test 6!\n");
     } else {
@@ -105,7 +105,7 @@ int main(void) {
     }
 
     char* test_7_string = "f";
-    arg_tokenize(buffer, test_7_string, 256);
+    arg_tokenize(buffer, test_7_string, 0, 256);
     if(0 == strcmp("f", buffer)) {
         printf("Passed test 7!\n");
     } else {

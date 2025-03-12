@@ -92,7 +92,13 @@ void push_argslist(ArgsList* aL, char* token)
     aL->list[aL->len] = NULL;
 }
 
-
+void reset_argslist(ArgsList* al) 
+{
+    for (size_t i = 0; i < al->len; ++i) {
+        al->list[i] = NULL;
+    }
+    al->len = 0;
+}
 
 // char *arg_whitespace = " \t\n\r\f";
 //int arg_parser(char** dest, char* src, size_t arg_max);

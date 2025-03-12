@@ -11,6 +11,7 @@
 
 
 #define MAX_ARG_LEN 256
+#define MAX_PATH 4096
 
 
 
@@ -20,10 +21,9 @@
 int main(void) {
     
     char* line_ptr = NULL;
-    char* path;
     size_t line_len = 0;
     ssize_t nread = 0;
-
+    
     
     char* str_arena_buffer = malloc(65536);
     if (str_arena_buffer == NULL) {
@@ -32,7 +32,7 @@ int main(void) {
     }
     StringArena str_arena;
     init_string_arena(&str_arena, str_arena_buffer, 65536);
-
+    
     
     
     ArgsList arg_list = {
@@ -41,10 +41,11 @@ int main(void) {
         .list = malloc(sizeof(char*) * 16)
     };
     
+    char path[MAX_PATH];
     
     while(1) {
         
-        arg_list.list = malloc(sizeof(char*) * 16);
+        
 
         if (arg_list.list == NULL) {
             fprintf(stderr, "malloc failed in arg list\n");
@@ -63,23 +64,27 @@ int main(void) {
         if (arg_count == 0) {
             fprintf(stderr, "We should never have 0 arguments...\n");
             string_arena_reset(&str_arena);
-            free(arg_list.list);
+            reset_argslist(&arg_list);
             continue;
         }
 
         
         //HACK: Do path things. We should have an array/linked list of all the paths
-        if((asprintf(&path,"/usr/bin/%s%c", arg_list.list[0], '\0')) < 0){
-            fprintf(stderr, "Allocation failed in asprintf for path\n");
+        int path_len = snprintf(path, MAX_PATH, "/usr/bin/%s%c", arg_list.list[0], '\0');
+        if(path_len < 0 || path_len >= MAX_PATH){
+            fprintf(stderr, "Error in path snprintf\n");
+            exit(1);
         }
         
-       
-        if (!memcmp("exit", arg_list.list[0], 4)) goto end;
+        if (strlen(arg_list.list[0]) >= 4) {
+
+            if (!memcmp("exit", arg_list.list[0], 4)) goto end;
+        }
 
         if (fork() == 0) {
             // We are the child
             if((execv(path, arg_list.list)) < 0) {
-                perror("Child Error!\n");
+                perror("wish");
                 exit(1);
             }
             
@@ -88,7 +93,8 @@ int main(void) {
             wait(NULL);
         }
         
-        free(arg_list.list);
+        reset_argslist(&arg_list);
+        
         string_arena_reset(&str_arena);
     }
 
@@ -96,7 +102,7 @@ int main(void) {
 
     free(arg_list.list);
     free(line_ptr);
-    free(path);
+
     free(str_arena_buffer);
 
     return 0;
