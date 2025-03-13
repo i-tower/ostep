@@ -12,7 +12,7 @@
 
 
 #define MAX_ARG_LEN 256
-#define MAX_PATH 4096
+
 
 
 int main(void) {
@@ -23,12 +23,15 @@ int main(void) {
     
     
     char* str_arena_buffer = malloc(65536);
-    if (str_arena_buffer == NULL) {
+    char* path_arena_buffer = malloc(65536);
+    if (str_arena_buffer == NULL || path_arena_buffer == NULL) {
         fprintf(stderr, "Failed to allocate backing buffer\n");
         exit(1);
     }
     StringArena str_arena;
+    StringArena path_arena;
     init_string_arena(&str_arena, str_arena_buffer, 65536);
+    init_string_arena(&path_arena, path_arena_buffer, 65536);
     
     
     
@@ -37,15 +40,17 @@ int main(void) {
         .size = 16,
         .list = malloc(sizeof(char*) * 16)
     };
-
+    
     
     StringList* path_list = init_path();
-
     
-    char path[MAX_PATH];
+    
+    char path_buffer[MAX_PATH];
     
     while(1) {
         
+        reset_stringlist(&arg_list);
+        string_arena_reset(&str_arena);
         
 
         if (arg_list.list == NULL) {
@@ -68,32 +73,30 @@ int main(void) {
             reset_stringlist(&arg_list);
             continue;
         }
-
+        
+        // Handle our commands
         if (strlen(arg_list.list[0]) >= 4) {
 
-            if (!memcmp("exit", arg_list.list[0], 4)) goto end;
+            if (!strcmp("exit", arg_list.list[0])) goto end;
 
-            if (!memcmp("path", arg_list.list[0], 4)) {
-                push_stringlist()
+            if (!strcmp("path", arg_list.list[0])) {
+                push_path(path_list, &path_arena, arg_list.list[1]);
+                continue;
             }
         }
         
-        //HACK: Do path things. We should have an array/linked list of all the paths
-        int path_len = snprintf(path, MAX_PATH, "/bin/%s%c", arg_list.list[0], '\0');
-        if (access(path, F_OK) == 0) {
-            printf("Access OK\n");
-        } else {
-            printf("Access Not Ok\n");
-        }
-        if(path_len < 0 || path_len >= MAX_PATH){
-            fprintf(stderr, "Error in path snprintf\n");
-            exit(1);
+        for (size_t i = 0; i < path_list->len; ++i) {
+            printf("Path: %s\n", path_list->list[i]);
         }
         
-
+        if (!resolve_path(path_list, path_buffer, arg_list.list[0])) {
+            printf("File %s not found\n", arg_list.list[0]);
+            continue;
+        }
+       
         if (fork() == 0) {
             // We are the child
-            if((execv(path, arg_list.list)) < 0) {
+            if((execv(path_buffer, arg_list.list)) < 0) {
                 perror("wish");
                 exit(1);
             }
@@ -103,9 +106,7 @@ int main(void) {
             wait(NULL);
         }
         
-        reset_stringlist(&arg_list);
         
-        string_arena_reset(&str_arena);
     }
 
     end:
@@ -114,6 +115,7 @@ int main(void) {
     free(line_ptr);
     free(path_list);
     free(str_arena_buffer);
+    free(path_arena_buffer);
 
     return 0;
 }

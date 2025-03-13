@@ -35,10 +35,6 @@ bool arg_parse_tester(StringArena *a, char** expected, char* input, int expected
             free(arg_list.list);
             ret = false;
         }
-
-        printf("Expected: %s\n", expected[i]);
-        printf("Actual: %s\n", arg_list.list[i]);
-
     }
 
     free(arg_list.list);

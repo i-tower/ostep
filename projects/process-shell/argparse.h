@@ -78,8 +78,8 @@ char* string_alloc(StringArena* arena, char* str, size_t len)
 
 
 // FIXME: Should I change this data structure to reallocate the whole thing on realloc and
-// have all string lists live on the heap? That seem better.
-void push_stringlist(StringList* sl, const char* token) 
+// have all string lists live on the heap? That seem better
+void push_stringlist(StringList* sl, char* token) 
 {
     if (sl->len + 1 == sl->size) { 
         if((sl->list = realloc(sl->list, sl->size * 2)) == NULL) {
