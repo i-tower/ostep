@@ -28,7 +28,6 @@ bool arg_parse_tester(StringArena *a, char** expected, char* input, int expected
        return false;
     }
     bool ret = true;
-    printf("Outside loop expected: %s\n", expected[0]);
     for (size_t i = 0; arg_list.list[i] != NULL && expected[i] != NULL; ++i) {
 
         if (memcmp(expected[i], arg_list.list[i], strlen(expected[i]))) {
@@ -141,7 +140,8 @@ int main(void) {
     if(!arg_parse_tester(&str_arena, test_2_expected, input, 1)) {
         printf("Failed test 2\n");
     } else {
-        printf("Test 2 passed\n");
+        printf("Test 2 passed!\n");
     }
 
+    
 }

@@ -14,7 +14,6 @@
 #define MAX_ARG_LEN 256
 
 
-
 int main(void) {
 
     char* line_ptr = NULL;
@@ -59,11 +58,11 @@ int main(void) {
         }
 
         printf("wish> ");
-        if ((nread= getline(&line_ptr, &line_len, stdin)) < 0) {
+        if ((nread = getline(&line_ptr, &line_len, stdin)) < 0) {
             exit(1);
         } else if (nread > MAX_ARG_LEN) {
             fprintf(stderr, "Input too long\n");
-            exit(1);
+            continue;
         }
          
         size_t arg_count = arg_parser(&arg_list, &str_arena, line_ptr);
@@ -85,13 +84,19 @@ int main(void) {
             }
         }
         
-        for (size_t i = 0; i < path_list->len; ++i) {
-            printf("Path: %s\n", path_list->list[i]);
-        }
+        // for (size_t i = 0; i < path_list->len; ++i) {
+        //     printf("Path: %s\n", path_list->list[i]);
+        // }
         
         if (!resolve_path(path_list, path_buffer, arg_list.list[0])) {
             printf("File %s not found\n", arg_list.list[0]);
             continue;
+        }
+
+        if (access(arg_list.list[0], F_OK)) {
+            printf("No access\n");
+        } else {
+            printf("Yes access\n"); 
         }
        
         if (fork() == 0) {
@@ -111,9 +116,9 @@ int main(void) {
 
     end:
 
+    destroy_path(path_list);
     free(arg_list.list);
     free(line_ptr);
-    free(path_list);
     free(str_arena_buffer);
     free(path_arena_buffer);
 

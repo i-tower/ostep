@@ -42,8 +42,8 @@ int resolve_path(const StringList* paths, char* path_buffer, const char* command
 {
     for (size_t i = 0; i < paths->len; ++i) {
         // Check if the file exists in the paths available
-        if (!access(paths->list[i], F_OK)) {
-            snprintf(path_buffer, MAX_PATH, "%s%s", paths->list[i], command);
+        snprintf(path_buffer, MAX_PATH, "%s%s", paths->list[i], command);
+        if (!access(path_buffer, F_OK)) {
             return 1;
         }
     }
