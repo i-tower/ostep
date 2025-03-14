@@ -17,7 +17,7 @@
 
 // TODO: Batch File: Handle command line arguments to wish: DONE!
 // TODO: Multiple commands in parallel with &: DONE!
-// TODO: Input / Output redirection: 
+// TODO: Input / Output redirection: DONE!
 
 int main(int argc, char** argv) {
 
@@ -139,6 +139,24 @@ int main(int argc, char** argv) {
 
             if (fork() == 0) {
                 // We are the child
+                // check for output redirection.
+                int outfile_fd;
+                for (size_t i = 0; arg_list.list[i] != NULL; ++i) {
+                    if (!strcmp(">", arg_list.list[i]) && arg_list.list[i + 1] != NULL) {
+                        arg_list.list[i] = NULL;
+                        int permission_mask =  S_IRWXU | S_IRWXG | S_IRWXO; 
+                        if ((outfile_fd = open(arg_list.list[i + 1], (O_CREAT | O_TRUNC | O_RDWR), permission_mask)) >= 0){
+                            int tmpfd_out = dup2(outfile_fd, STDOUT_FILENO);
+                            int tmpfd_err = dup2(outfile_fd, STDERR_FILENO);
+                            if (tmpfd_out < 0 || tmpfd_err < 0) {
+                                exit(1);
+                            }
+                        } else {
+                            fprintf(stderr, "Failed to open output file\n");
+                            exit(1);
+                        }
+                    }
+                }
                 if((execv(path_buffer, arg_list.list)) < 0) {
                     perror("wish");
                     exit(1);
