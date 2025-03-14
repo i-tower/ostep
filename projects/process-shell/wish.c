@@ -15,9 +15,9 @@
 #define MAX_ARG_LEN 256
 
 
-// TODO: Batch File: Handle command line arguments to wish
-// TODO: Multiple commands in parallel with &
-// TODO: Input / Output redirection
+// TODO: Batch File: Handle command line arguments to wish: DONE!
+// TODO: Multiple commands in parallel with &: DONE!
+// TODO: Input / Output redirection: 
 
 int main(int argc, char** argv) {
 
@@ -74,11 +74,10 @@ int main(int argc, char** argv) {
     char path_buffer[MAX_PATH];
     
     while(1) {
-        
+        reset_stringlist(&command_list);
         reset_stringlist(&arg_list);
         string_arena_reset(&str_arena);
         
-
         if (arg_list.list == NULL) {
             fprintf(stderr, "malloc failed in arg list\n");
             exit(1);
@@ -96,58 +95,61 @@ int main(int argc, char** argv) {
             continue;
         }
 
-        size_t command_count = get_commands(&command_list, line_ptr);
-        UNUSED(command_count);
-        
-
-        size_t arg_count = arg_parser(&arg_list, &str_arena, line_ptr);
-        if (arg_count == 0) {
-            fprintf(stderr, "We should never have 0 arguments...\n");
-            string_arena_reset(&str_arena);
-            reset_stringlist(&arg_list);
-            continue;
+        size_t command_count = get_commands(&command_list, &str_arena, line_ptr);
+        if (command_count == 0) {
+            fprintf(stderr, "command_count should never be 0\n");
+            exit(1);
         }
         
-        for (size_t i = 0; i < arg_list.len; ++i) {
-            if (arg_list.list[i][0] == '&'){
-                
+        for (size_t i = 0; i < command_list.len; ++i) {
+            
+            size_t arg_count = arg_parser(&arg_list, &str_arena, command_list.list[i]);
+            if (arg_count == 0) {
+                fprintf(stderr, "We should never have 0 arguments...\n");
+                //string_arena_reset(&str_arena);
+                reset_stringlist(&arg_list);
+                continue;
             }
-        }
-        // Handle our commands
-        if (strlen(arg_list.list[0]) > 0) {
-
-            if (!strcmp("exit", arg_list.list[0])) goto end;
-
-            if (!strcmp("path", arg_list.list[0])) {
-                push_path(path_list, &path_arena, arg_list.list[1]);
+            
+            // Handle our commands
+            if (strlen(arg_list.list[0]) > 0) {
+    
+                if (!strcmp("exit", arg_list.list[0])) goto end;
+    
+                if (!strcmp("path", arg_list.list[0])) {
+                    push_path(path_list, &path_arena, arg_list.list[1]);
+                    reset_stringlist(&arg_list);
+                    continue;
+                }
+    
+                if(!strcmp("cd", arg_list.list[0]) && arg_list.len == 2) {
+                    if(!chdir(arg_list.list[1])) {
+                        perror("cd");
+                        reset_stringlist(&arg_list);
+                        continue;
+                    }
+                }
+            }
+            
+            if (!resolve_path(path_list, path_buffer, arg_list.list[0])) {
+                printf("File %s not found\n", arg_list.list[0]);
+                reset_stringlist(&arg_list);
                 continue;
             }
 
-            if(!strcmp("cd", arg_list.list[0]) && arg_list.len == 2) {
-                if(!chdir(arg_list.list[1])) {
-                    perror("cd");
-                    continue;
+            if (fork() == 0) {
+                // We are the child
+                if((execv(path_buffer, arg_list.list)) < 0) {
+                    perror("wish");
+                    exit(1);
                 }
+                
             }
-        }
-        
-        if (!resolve_path(path_list, path_buffer, arg_list.list[0])) {
-            printf("File %s not found\n", arg_list.list[0]);
-            continue;
+
+            reset_stringlist(&arg_list);
         }
        
-        if (fork() == 0) {
-            // We are the child
-            if((execv(path_buffer, arg_list.list)) < 0) {
-                perror("wish");
-                exit(1);
-            }
-            
-        } else {
-            // Parent process
-            wait(NULL);
-        }
-        
+        while(wait(NULL) > 0);
         
     }
 
@@ -155,6 +157,7 @@ int main(int argc, char** argv) {
 
     destroy_path(path_list);
     free(arg_list.list);
+    free(command_list.list);
     free(line_ptr);
     free(str_arena_buffer);
     free(path_arena_buffer);
