@@ -24,7 +24,7 @@ typedef struct StringList {
 typedef struct StringArena {
     uintptr_t offset;
     size_t size;
-    StringArena* next; // If we need more memory
+    StringArena* next; // If we need more memory. UNUSED
     char* data;
 } StringArena;
 

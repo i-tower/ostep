@@ -2,6 +2,7 @@
 #define _GNU_SOURCE
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,12 +15,33 @@
 #define MAX_ARG_LEN 256
 
 
-int main(void) {
+// TODO: Batch File: Handle command line arguments to wish
+// TODO: Multiple commands in parallel with &
+// TODO: Input / Output redirection
+
+int main(int argc, char** argv) {
 
     char* line_ptr = NULL;
     size_t line_len = 0;
     ssize_t nread = 0;
-    
+    int batch = 0;
+    int batch_file_fd;
+
+    if (argc == 2) {
+        
+        if ((batch_file_fd = open(argv[1], O_RDONLY)) < 0) {
+            perror("fopen");
+            exit(1);
+        }
+
+        if (dup2(batch_file_fd, STDIN_FILENO) < 0) {
+            perror("dup2");
+            exit(1);
+        } else {
+            // set batch flag so we exit after first loop
+            batch = 1;
+        }
+    }
     
     char* str_arena_buffer = malloc(65536);
     char* path_arena_buffer = malloc(65536);
@@ -57,9 +79,13 @@ int main(void) {
             exit(1);
         }
 
-        printf("wish> ");
+        if (batch == 0) {
+            // only prompt if we are not doing batches.
+            printf("wish> ");
+        }
+
         if ((nread = getline(&line_ptr, &line_len, stdin)) < 0) {
-            exit(1);
+            exit(0);
         } else if (nread > MAX_ARG_LEN) {
             fprintf(stderr, "Input too long\n");
             continue;
@@ -73,8 +99,13 @@ int main(void) {
             continue;
         }
         
+        for (size_t i = 0; i < arg_list.len; ++i) {
+            if (arg_list.list[i][0] == '&'){
+                
+            }
+        }
         // Handle our commands
-        if (strlen(arg_list.list[0]) >= 4) {
+        if (strlen(arg_list.list[0]) > 0) {
 
             if (!strcmp("exit", arg_list.list[0])) goto end;
 
@@ -82,21 +113,18 @@ int main(void) {
                 push_path(path_list, &path_arena, arg_list.list[1]);
                 continue;
             }
+
+            if(!strcmp("cd", arg_list.list[0]) && arg_list.len == 2) {
+                if(!chdir(arg_list.list[1])) {
+                    perror("cd");
+                    continue;
+                }
+            }
         }
-        
-        // for (size_t i = 0; i < path_list->len; ++i) {
-        //     printf("Path: %s\n", path_list->list[i]);
-        // }
         
         if (!resolve_path(path_list, path_buffer, arg_list.list[0])) {
             printf("File %s not found\n", arg_list.list[0]);
             continue;
-        }
-
-        if (access(arg_list.list[0], F_OK)) {
-            printf("No access\n");
-        } else {
-            printf("Yes access\n"); 
         }
        
         if (fork() == 0) {
