@@ -1,8 +1,9 @@
 #ifndef WISHPATHS_H
 #define WISHPATHS_H
 
+
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 #include "argparse.h"
 
 #define MAX_PATH 4096

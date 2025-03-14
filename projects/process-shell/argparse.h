@@ -1,6 +1,8 @@
 #ifndef ARG_PARSE
 #define ARG_PARSE
 
+
+
 #include <ctype.h>
 #include <sys/types.h>
 #include <stdio.h>
@@ -101,6 +103,23 @@ void reset_stringlist(StringList* sl)
         sl->list[i] = NULL;
     }
     sl->len = 0;
+}
+
+size_t get_commands(StringList* dest, StringArena* arena, char* line) 
+{
+    char* working_line = strdup(line);
+    char* work_line_presrve = working_line;
+    char* command;
+    size_t i = 0;
+    for(; (command = strsep(&working_line, "&")); ++i) {
+        command = string_alloc(arena, command, strlen(command) + 1);
+        push_stringlist(dest, command);
+    }
+    
+    
+    // ask kerbs? 
+    free(work_line_presrve);
+    return i;
 }
 
 // char *arg_whitespace = " \t\n\r\f";

@@ -62,6 +62,11 @@ int main(int argc, char** argv) {
         .list = malloc(sizeof(char*) * 16)
     };
     
+    StringList command_list = {
+        .len = 0,
+        .size = 16,
+        .list = malloc(sizeof(char*) * 16)
+    };
     
     StringList* path_list = init_path();
     
@@ -90,7 +95,11 @@ int main(int argc, char** argv) {
             fprintf(stderr, "Input too long\n");
             continue;
         }
-         
+
+        size_t command_count = get_commands(&command_list, line_ptr);
+        UNUSED(command_count);
+        
+
         size_t arg_count = arg_parser(&arg_list, &str_arena, line_ptr);
         if (arg_count == 0) {
             fprintf(stderr, "We should never have 0 arguments...\n");

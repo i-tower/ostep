@@ -1,3 +1,7 @@
+#define _POSIX_C_SOURCE 200809L
+#define _GNU_SOURCE
+
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -143,5 +147,45 @@ int main(void) {
         printf("Test 2 passed!\n");
     }
 
+    // Testing get commands
+
+    printf("------- Testing Command Separation -------\n");
+
     
+
+    StringList commands = {
+        .len = 0,
+        .size = 16,
+        .list = malloc(sizeof(char*) * 16),
+    };
+
+    size_t command_count = 0;
+    string_arena_reset(&str_arena);
+    command_count = get_commands(&commands, &str_arena, "ls");
+
+    if (command_count == 1 && !strcmp("ls", commands.list[0])) {
+        printf("Passed test 1!\n");
+    } else {
+        printf("Failed test 1!\n");
+    }
+
+    string_arena_reset(&str_arena);
+    reset_stringlist(&commands);
+    command_count = get_commands(&commands, &str_arena, "ls & hello world & cat the_worldo.txt & btop\n");
+    
+    if (command_count == 4) {
+        
+        printf("Test 2 conditional pass!\n");
+        for (size_t i = 0; i < commands.len; ++i) {
+            printf("%s\n", commands.list[i]);
+        }
+        
+    } else {
+        printf("Test 2 failed!\n");
+    }
+
+    reset_stringlist(&commands);
+    free(backing_buffer);
+    free(commands.list);
+
 }
