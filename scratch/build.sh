@@ -1,3 +1,5 @@
 #!/bin/bash
 
-gcc -Og -ggdb -Wall -Wextra -o $1 $1.c
+GETCPUS="-D NUMCPUS=$(nproc --all)" 
+
+gcc -Og -ggdb -Wall -Wextra $GETCPUS -o $1 $1.c
