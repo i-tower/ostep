@@ -9,11 +9,15 @@ struct args {
     int lock;
 };
 
+int test_and_set(int* old_ptr, int new) {
+    int old = *old_ptr;
+    *old_ptr = new;
+    return old;
+}
+
 // Both threads can acquire the lock at the same time...
-int lock_acquire( _Atomic int* lock) {
-    int n;
-    while(*lock);
-    *lock = 1;
+int lock_acquire(int* lock) {
+    while(test_and_set(lock, 1));
     return 1;
 }
 
@@ -33,7 +37,7 @@ void* worker(void* value) {
 
 void* worker_with_lock(void* a){
     struct args* args = (struct args*) a;
-    for (size_t i = 0; i < 1000000; ++i) {
+    for (size_t i = 0; i < 1000; ++i) {
         lock_acquire(&args->lock);
         args->n = args->n + 1;
         lock_release(&args->lock);
